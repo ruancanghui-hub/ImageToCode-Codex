@@ -1,6 +1,6 @@
 {
   "name": "image-to-code",
-  "version": "0.1.0+codex.20260920110624",
+  "version": "0.1.0+codex.20260920110657",
   "description": "Open the bundled ImageToCode Annotator and hand off annotated images into code-ready assets.",
   "author": {
     "name": "ImageToCode"
