@@ -26,6 +26,8 @@ Handoff 约定路径：`output/image-to-code/<page-slug>/`（`source.*`、`annot
 
 ## Codex 插件
 
+安装后的插件自带可运行的 Annotator 静态页面。对 Codex 说“在右侧打开 ImageToCode Annotator”即可启动本地页面并在右侧 Web 面板显示；不需要另外克隆或启动 `apps/annotator`。
+
 ```bash
 # 本机路径安装
 codex plugin marketplace add /absolute/path/to/ImageToCode-Codex
@@ -34,6 +36,12 @@ codex plugin add image-to-code@image-to-code-codex
 # 或从 GitHub 安装
 codex plugin marketplace add https://github.com/ruancanghui-hub/ImageToCode-Codex
 codex plugin add image-to-code@image-to-code-codex
+```
+
+从 GitHub 安装后，在新建 Codex 任务中使用：
+
+```text
+打开 ImageToCode Annotator 到右侧
 ```
 
 新线程后才会加载更新后的 skills。粘贴 Annotator 复制的 prompt，或手动说明 HandoffBundle 路径以触发 `image-to-code-handoff`。

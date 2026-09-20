@@ -1,22 +1,20 @@
 {
   "name": "image-to-code",
-  "version": "0.1.0",
-  "description": "Handoff AnnotatedImage bundles into regenerating-ui asset and Flutter page skills.",
+  "version": "0.1.0+codex.20260920110505",
+  "description": "Open the bundled ImageToCode Annotator and hand off annotated images into code-ready assets.",
   "author": {
     "name": "ImageToCode"
   },
   "skills": "./skills/",
   "interface": {
     "displayName": "Image To Code",
-    "shortDescription": "Annotator Handoff → code-ready assets / Flutter page.",
-    "longDescription": "Consumes output/image-to-code/<page-slug>/ HandoffBundles from the AnnotatorApp and orchestrates regenerating-ui-redbox-assets plus regenerating-ui-assets-to-flutter-page via prose skill composition.",
+    "shortDescription": "Open Annotator \u2192 Handoff \u2192 code-ready assets.",
+    "longDescription": "Includes a self-contained ImageToCode Annotator web app for Codex's right-side browser and orchestrates its HandoffBundles into code-ready assets and Flutter pages.",
     "developerName": "ImageToCode",
     "category": "Productivity",
-    "capabilities": ["filesystem"],
-    "defaultPrompt": [
-      "Handoff output/image-to-code/<page-slug>/",
-      "Build AssetPackage from annotated.png",
-      "Flutter page if TargetStack is flutter"
-    ]
+    "capabilities": [
+      "filesystem"
+    ],
+    "defaultPrompt": "Open the ImageToCode Annotator in the Codex right-side browser."
   }
 }

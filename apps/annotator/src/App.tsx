@@ -44,7 +44,16 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [zoom, setZoom] = useState(1)
   const [fitToken, setFitToken] = useState(0)
+  const [sidePanel, setSidePanel] = useState<'tools' | 'props' | null>(null)
   const [calloutDraft, setCalloutDraft] = useState('')
+
+  const togglePanel = (panel: 'tools' | 'props') => {
+    setSidePanel((prev) => {
+      const next = prev === panel ? null : panel
+      if (next === null) setFitToken((n) => n + 1)
+      return next
+    })
+  }
   const [workspace, setWorkspace] = useState<FileSystemDirectoryHandle | null>(null)
   const [status, setStatus] = useState<string>('上传设计图开始标注')
   const [busy, setBusy] = useState(false)
@@ -319,52 +328,36 @@ export default function App() {
   }
 
   return (
-    <div className="relative flex h-dvh min-h-0 flex-col gap-2 overflow-hidden p-2 md:p-3">
+    <div className="relative flex h-dvh min-h-0 flex-col gap-1 overflow-hidden p-1 sm:gap-1.5 sm:p-2">
       {draggingFile && (
         <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-[rgba(15,23,42,0.28)] backdrop-blur-[2px]">
-          <div className="rounded-2xl border-2 border-dashed border-[var(--accent)] bg-white/95 px-10 py-8 text-center shadow-xl">
-            <p className="text-2xl font-bold text-[var(--ink)]" style={{ fontFamily: 'var(--font-display)' }}>
+          <div className="rounded-2xl border-2 border-dashed border-[var(--accent)] bg-white/95 px-6 py-5 text-center shadow-xl">
+            <p className="text-lg font-bold text-[var(--ink)]" style={{ fontFamily: 'var(--font-display)' }}>
               松开以上传设计图
             </p>
-            <p className="mt-2 text-sm text-[var(--muted)]">支持 PNG / JPG / WebP</p>
           </div>
         </div>
       )}
 
-      <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 rounded-[var(--radius)] border border-[var(--line)] bg-white/80 px-3 py-2 backdrop-blur">
-        <div className="flex min-w-0 items-baseline gap-2">
-          <h1 className="truncate text-lg font-bold md:text-xl">
-            <GradientText>ImageToCode Annotator</GradientText>
-          </h1>
-          <span className="hidden text-xs text-[var(--muted)] sm:inline">标注 → Handoff</span>
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          <button type="button" className={btnSecondary} onClick={() => fileInputRef.current?.click()}>
-            上传
-          </button>
-          <button
-            type="button"
-            className={btnSecondary}
-            onClick={() => {
-              const input = document.createElement('input')
-              input.type = 'file'
-              input.accept = '.itc.json,application/json'
-              input.onchange = () => {
-                const f = input.files?.[0]
-                if (f) void openProject(f)
-              }
-              input.click()
-            }}
-          >
-            .itc
-          </button>
-          <button type="button" className={btnSecondary} onClick={() => void pickWorkspace()}>
-            工作区
-          </button>
-          <button type="button" className={btnPrimary} disabled={busy || !metaReady} onClick={() => void runHandoff()}>
-            {busy ? '…' : '发给 Codex'}
-          </button>
-        </div>
+      <header className="flex shrink-0 items-center gap-1 rounded-lg border border-[var(--line)] bg-white/90 px-1.5 py-1 backdrop-blur sm:gap-2 sm:px-2">
+        <h1 className="min-w-0 flex-1 truncate text-sm font-bold sm:text-base">
+          <GradientText>Annotator</GradientText>
+        </h1>
+        <button type="button" className={btnSecondary} onClick={() => togglePanel('tools')}>
+          工具
+        </button>
+        <button type="button" className={btnSecondary} onClick={() => togglePanel('props')}>
+          属性
+        </button>
+        <button type="button" className={btnSecondary} onClick={() => fileInputRef.current?.click()}>
+          上传
+        </button>
+        <button type="button" className={btnSecondary} onClick={() => void pickWorkspace()}>
+          区
+        </button>
+        <button type="button" className={btnPrimary} disabled={busy || !metaReady} onClick={() => void runHandoff()}>
+          {busy ? '…' : 'Codex'}
+        </button>
         <input
           ref={fileInputRef}
           type="file"
@@ -374,8 +367,45 @@ export default function App() {
         />
       </header>
 
-      <div className="grid min-h-0 flex-1 gap-2 lg:grid-cols-[200px_minmax(0,1fr)_200px]">
-        <SpotlightCard className="flex min-h-0 flex-col overflow-auto p-2.5">
+      {/* 窄屏工具条：始终占一行，不抢画布高度 */}
+      <div className="flex shrink-0 items-center gap-1 overflow-x-auto rounded-lg border border-[var(--line)] bg-white/90 px-1 py-1 xl:hidden">
+        {tools.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            className={`${chip} shrink-0 ${tool === t.id ? chipActive : ''}`}
+            onClick={() => setTool(t.id)}
+            title={t.hint}
+          >
+            {t.label}
+          </button>
+        ))}
+        <span className="mx-0.5 h-4 w-px shrink-0 bg-[var(--line)]" />
+        {(['page', 'card'] as BackgroundKind[]).map((k) => (
+          <button
+            key={k}
+            type="button"
+            className={`${chip} shrink-0 ${backgroundKind === k ? chipActive : ''}`}
+            onClick={() => setBackgroundKind(k)}
+          >
+            {k === 'page' ? '页背景' : '卡背景'}
+          </button>
+        ))}
+        <span className="mx-0.5 h-4 w-px shrink-0 bg-[var(--line)]" />
+        <button type="button" className={`${btnSecondary} shrink-0`} disabled={!canUndo} onClick={undo}>
+          撤
+        </button>
+        <button type="button" className={`${btnSecondary} shrink-0`} disabled={!canRedo} onClick={redo}>
+          重
+        </button>
+        <button type="button" className={`${btnSecondary} shrink-0`} onClick={() => setFitToken((n) => n + 1)}>
+          适应{Math.round(zoom * 100)}%
+        </button>
+      </div>
+
+      <div className="relative grid min-h-0 flex-1 gap-1.5 xl:grid-cols-[168px_minmax(0,1fr)_168px]">
+        {/* 大屏左侧工具 */}
+        <SpotlightCard className="hidden min-h-0 flex-col overflow-auto p-2 xl:flex">
           <SectionTitle>工具箱</SectionTitle>
           <div className="mt-2 flex flex-col gap-1">
             {tools.map((t) => (
@@ -390,7 +420,6 @@ export default function App() {
               </button>
             ))}
           </div>
-
           <SectionTitle className="mt-3">背景</SectionTitle>
           <div className="mt-1.5 flex gap-1">
             {(['page', 'card'] as BackgroundKind[]).map((k) => (
@@ -404,41 +433,28 @@ export default function App() {
               </button>
             ))}
           </div>
-
-          <SectionTitle className="mt-3">草稿</SectionTitle>
-          <label className="mt-1 block text-[11px] text-[var(--muted)]">Region CalloutCopy</label>
+          <SectionTitle className="mt-3">Region 文案</SectionTitle>
           <textarea
-            className={`${inputClass} min-h-16`}
+            className={`${inputClass} mt-1 min-h-16`}
             placeholder={'标题\n副标题'}
             value={calloutDraft}
             onChange={(e) => setCalloutDraft(e.target.value)}
           />
-
-          <div className="mt-3 flex flex-wrap gap-1">
+          <div className="mt-2 flex flex-wrap gap-1">
             <button type="button" className={btnSecondary} disabled={!canUndo} onClick={undo}>
               撤销
             </button>
             <button type="button" className={btnSecondary} disabled={!canRedo} onClick={redo}>
               重做
             </button>
-            <button type="button" className={btnSecondary} onClick={() => setZoom((z) => Math.min(4, z * 1.15))}>
-              +
-            </button>
-            <button type="button" className={btnSecondary} onClick={() => setZoom((z) => Math.max(0.05, z / 1.15))}>
-              −
-            </button>
-            <button
-              type="button"
-              className={btnSecondary}
-              title="适应窗口"
-              onClick={() => setFitToken((n) => n + 1)}
-            >
+            <button type="button" className={btnSecondary} onClick={() => setFitToken((n) => n + 1)}>
               适应 {Math.round(zoom * 100)}%
             </button>
           </div>
         </SpotlightCard>
 
-        <SpotlightCard className="flex min-h-0 flex-col overflow-hidden p-1.5">
+        {/* 主画布：永远占满剩余空间 */}
+        <SpotlightCard className="flex min-h-0 min-w-0 flex-col overflow-hidden p-1">
           {!imageUrl || !imageEl ? (
             <button
               type="button"
@@ -450,16 +466,16 @@ export default function App() {
               onClick={() => fileInputRef.current?.click()}
             >
               <span className="text-base font-semibold text-[var(--ink)]" style={{ fontFamily: 'var(--font-display)' }}>
-                拖放设计图到此处
+                拖放设计图
               </span>
-              <span className="text-xs">或点击选择 PNG / JPG / WebP</span>
+              <span className="text-xs">或点击上传</span>
             </button>
           ) : !metaReady ? (
-            <div className="flex h-full flex-col items-center justify-center gap-3 p-4">
-              <h2 className="text-lg font-bold" style={{ fontFamily: 'var(--font-display)' }}>
-                会话设置
-              </h2>
-              <div className="w-full max-w-md space-y-2">
+            <div className="flex h-full min-h-0 flex-col overflow-auto p-3">
+              <div className="mx-auto w-full max-w-sm space-y-2 rounded-lg border border-[var(--line)] bg-white/90 p-3">
+                <h2 className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+                  会话设置
+                </h2>
                 <Field label="PageSlug">
                   <input
                     className={`${inputClass} ${metaError ? 'border-[var(--danger)]' : ''}`}
@@ -472,25 +488,25 @@ export default function App() {
                     autoFocus
                   />
                 </Field>
-                {metaError && <p className="text-sm text-[var(--danger)]">{metaError}</p>}
+                {metaError && <p className="text-xs text-[var(--danger)]">{metaError}</p>}
                 <Field label="TargetStack">
                   <select
                     className={inputClass}
                     value={targetStack}
                     onChange={(e) => setTargetStack(e.target.value as TargetStack)}
                   >
-                    <option value="flutter">flutter（资源 + 页面）</option>
-                    <option value="react">react（仅资源）</option>
-                    <option value="html">html（仅资源）</option>
+                    <option value="flutter">flutter</option>
+                    <option value="react">react</option>
+                    <option value="html">html</option>
                   </select>
                 </Field>
                 {targetStack === 'flutter' && (
-                  <Field label="FlutterPagePath（可选）">
+                  <Field label="FlutterPagePath">
                     <input
                       className={inputClass}
                       value={flutterPagePath}
                       onChange={(e) => setFlutterPagePath(e.target.value)}
-                      placeholder="lib/features/sleep/pages/home_page.dart"
+                      placeholder="lib/.../page.dart"
                     />
                   </Field>
                 )}
@@ -522,10 +538,11 @@ export default function App() {
           )}
         </SpotlightCard>
 
-        <SpotlightCard className="flex min-h-0 flex-col overflow-auto p-2.5">
+        {/* 大屏右侧属性 */}
+        <SpotlightCard className="hidden min-h-0 flex-col overflow-auto p-2 xl:flex">
           <SectionTitle>选中项</SectionTitle>
           {!selected ? (
-            <p className="mt-2 text-xs text-[var(--muted)]">在画布上选择一个标注</p>
+            <p className="mt-2 text-xs text-[var(--muted)]">选择一个标注</p>
           ) : selected.type === 'iconMark' ? (
             <div className="mt-2 space-y-2">
               <Field label="SemanticName">
@@ -535,19 +552,16 @@ export default function App() {
                   onChange={(e) => updateSelectedName(e.target.value)}
                 />
               </Field>
-              <p className="text-[11px] text-[var(--muted)]">
-                {Math.round(selected.width)}×{Math.round(selected.height)}
-              </p>
             </div>
           ) : (
             <div className="mt-2 space-y-2">
               <p className="text-xs">
-                {selected.type === 'backgroundCallout' ? 'BackgroundCallout' : 'RegionCallout'} · {selected.label}
+                {selected.type === 'backgroundCallout' ? 'Background' : 'Region'} · {selected.label}
               </p>
               {selected.type === 'regionCallout' && (
                 <Field label="CalloutCopy">
                   <textarea
-                    className={`${inputClass} min-h-24`}
+                    className={`${inputClass} min-h-20`}
                     value={(selected as RegionCallout).calloutCopy.join('\n')}
                     onChange={(e) => updateSelectedCopy(e.target.value)}
                   />
@@ -555,9 +569,8 @@ export default function App() {
               )}
             </div>
           )}
-
-          <SectionTitle className="mt-4">标注列表</SectionTitle>
-          <ul className="mt-1.5 max-h-[40vh] space-y-0.5 overflow-auto text-xs">
+          <SectionTitle className="mt-3">列表</SectionTitle>
+          <ul className="mt-1 max-h-[36vh] space-y-0.5 overflow-auto text-xs">
             {annotations.map((a) => (
               <li key={a.id}>
                 <button
@@ -576,30 +589,139 @@ export default function App() {
               </li>
             ))}
           </ul>
-
-          <SectionTitle className="mt-4">导出</SectionTitle>
-          <div className="mt-1.5 flex flex-col gap-1.5">
-            <button type="button" className={btnSecondary} disabled={!metaReady} onClick={() => void saveProjectOnly()}>
-              保存 .itc.json
-            </button>
-            <p className="break-all text-[11px] leading-relaxed text-[var(--muted)]">
-              <code className="text-[var(--ink)]">output/image-to-code/{pageSlug || '<slug>'}/</code>
-            </p>
-          </div>
+          <SectionTitle className="mt-3">导出</SectionTitle>
+          <button type="button" className={`${btnSecondary} mt-1`} disabled={!metaReady} onClick={() => void saveProjectOnly()}>
+            保存 .itc.json
+          </button>
+          <p className="mt-1 break-all text-[10px] text-[var(--muted)]">
+            <code className="text-[var(--ink)]">output/image-to-code/{pageSlug || '<slug>'}/</code>
+          </p>
         </SpotlightCard>
+
+        {/* 窄屏抽屉 */}
+        {sidePanel && (
+          <div className="absolute inset-0 z-40 flex xl:hidden" onClick={() => { setSidePanel(null); setFitToken((n) => n + 1) }}>
+            <div className="absolute inset-0 bg-black/25" />
+            <div
+              className={`relative z-10 flex h-full w-[min(280px,88%)] flex-col overflow-auto bg-white p-3 shadow-xl ${
+                sidePanel === 'props' ? 'ml-auto' : ''
+              }`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-2 flex items-center justify-between">
+                <SectionTitle>{sidePanel === 'tools' ? '工具箱' : '属性 / 导出'}</SectionTitle>
+                <button type="button" className={btnSecondary} onClick={() => { setSidePanel(null); setFitToken((n) => n + 1) }}>
+                  关闭
+                </button>
+              </div>
+              {sidePanel === 'tools' ? (
+                <>
+                  <div className="flex flex-col gap-1">
+                    {tools.map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        className={`${toolBtn} ${tool === t.id ? toolBtnActive : ''}`}
+                        onClick={() => {
+                          setTool(t.id)
+                          setSidePanel(null)
+                        }}
+                      >
+                        <span className="text-sm font-semibold">{t.label}</span>
+                        <span className="block text-[11px] text-[var(--muted)]">{t.hint}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <label className="mt-3 block text-[11px] text-[var(--muted)]">Region CalloutCopy</label>
+                  <textarea
+                    className={`${inputClass} min-h-20`}
+                    value={calloutDraft}
+                    onChange={(e) => setCalloutDraft(e.target.value)}
+                  />
+                </>
+              ) : (
+                <>
+                  {!selected ? (
+                    <p className="text-xs text-[var(--muted)]">未选中标注</p>
+                  ) : selected.type === 'iconMark' ? (
+                    <Field label="SemanticName">
+                      <input
+                        className={inputClass}
+                        value={selected.semanticName}
+                        onChange={(e) => updateSelectedName(e.target.value)}
+                      />
+                    </Field>
+                  ) : selected.type === 'regionCallout' ? (
+                    <Field label="CalloutCopy">
+                      <textarea
+                        className={`${inputClass} min-h-24`}
+                        value={selected.calloutCopy.join('\n')}
+                        onChange={(e) => updateSelectedCopy(e.target.value)}
+                      />
+                    </Field>
+                  ) : (
+                    <p className="text-xs">{selected.label}</p>
+                  )}
+                  <SectionTitle className="mt-3">列表 · {annotations.length}</SectionTitle>
+                  <ul className="mt-1 max-h-48 space-y-0.5 overflow-auto text-xs">
+                    {annotations.map((a) => (
+                      <li key={a.id}>
+                        <button
+                          type="button"
+                          className="w-full rounded-md px-2 py-1 text-left hover:bg-[var(--bg)]"
+                          onClick={() => setSelectedId(a.id)}
+                        >
+                          {a.type === 'iconMark'
+                            ? a.semanticName
+                            : a.type === 'backgroundCallout'
+                              ? `BG ${a.label}`
+                              : a.calloutCopy[0] ?? 'Region'}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    type="button"
+                    className={`${btnSecondary} mt-3`}
+                    disabled={!metaReady}
+                    onClick={() => void saveProjectOnly()}
+                  >
+                    保存 .itc.json
+                  </button>
+                  <button
+                    type="button"
+                    className={`${btnSecondary} mt-1`}
+                    onClick={() => {
+                      const input = document.createElement('input')
+                      input.type = 'file'
+                      input.accept = '.itc.json,application/json'
+                      input.onchange = () => {
+                        const f = input.files?.[0]
+                        if (f) void openProject(f)
+                      }
+                      input.click()
+                    }}
+                  >
+                    打开 .itc.json
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
-      <footer className="shrink-0 truncate rounded-lg border border-[var(--line)] bg-white/70 px-3 py-1.5 text-xs text-[var(--muted)] backdrop-blur">
+      <footer className="shrink-0 truncate rounded-md border border-[var(--line)] bg-white/80 px-2 py-0.5 text-[10px] text-[var(--muted)] sm:text-xs">
         {status}
-        {workspace ? ` · ${workspace.name}` : ' · 未授权工作区'}
-        {` · ${annotations.length} 标注`}
+        {workspace ? ` · ${workspace.name}` : ''}
+        {` · ${annotations.length}`}
       </footer>
     </div>
   )
 }
 
 
-function SectionTitle({ children, className = '' }: { children: string; className?: string }) {
+function SectionTitle({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
     <h2
       className={`text-sm font-bold tracking-wide text-[var(--ink)] ${className}`}
