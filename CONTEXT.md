@@ -17,7 +17,7 @@ _Avoid_: 裁切框, crop, 红框（口语可保留，文档用 IconMark）
 _Avoid_: 背景箭头, 背景切图
 
 **RegionCallout**:
-指向背景区域的 callout，并携带周围文案上下文供页面生成使用；文字默认由代码渲染，不烤进背景图。
+指向背景区域的 callout；非空 CalloutCopy 与背景一起再生为一张图片，页面不重复叠加文字。
 _Avoid_: 箭头+文字工具, 组合标注, OCR 框（录入方式另定）
 
 **AnnotatedImage**:
@@ -65,15 +65,15 @@ _Avoid_: 工程文件, workspace
 _Avoid_: 页面标题, route name（可相关但术语用 PageSlug）
 
 **HandoffBundle**:
-一次 Handoff 的约定产物目录：`output/image-to-code/<page-slug>/annotated.png` 与 `annotation.json`（及可选源图副本）。
+一次 Handoff 的独立快照目录：`output/image-to-code/<page-slug>/<request-id>/`，包含 `annotated.png`、`annotation.json`、原图和发送指令。
 _Avoid_: 输出包, export folder
 
 **WorkspaceRoot**:
-用户通过 File System Access API 授权给 AnnotatorApp 的目录；App 在其下写入 HandoffBundle。不支持时回退为下载文件由用户手动放置。
+插件启动时绑定的 Codex 任务工作区，HandoffBundle 写入其 output 目录。独立静态页面仍支持 File System Access 授权或下载回退。
 _Avoid_: 自动挂载磁盘, 本地后端
 
 **CalloutCopy**:
-RegionCallout 附带的、由用户手工录入的文案上下文；供页面生成时用代码 Text 渲染，不进入背景资产。
+RegionCallout 附带的、由用户手工录入的精确文案；与指向的背景一起生成图片，空文案仍生成纯背景。
 _Avoid_: OCR 结果, 图中文字自动识别
 
 **FlutterPagePath**:

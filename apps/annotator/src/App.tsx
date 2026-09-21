@@ -9,6 +9,7 @@ import {
   buildHandoffPrompt,
   downloadBlob,
   renderAnnotatedPng,
+  sendHandoffToCodex,
   supportsDirectoryPicker,
   writeHandoffBundle,
 } from './lib/export'
@@ -193,15 +194,9 @@ export default function App() {
   }
 
   const requestCalloutCopy = useCallback((): string[] => {
-    const lines = calloutDraft
+    // 文案可在侧栏补填；内置浏览器不支持原生 prompt 弹窗。
+    return calloutDraft
       .split('\n')
-      .map((l) => l.trim())
-      .filter(Boolean)
-    if (lines.length > 0) return lines
-    const typed = window.prompt('CalloutCopy（图中文案，可多句用 | 分隔）')
-    if (!typed) return []
-    return typed
-      .split('|')
       .map((l) => l.trim())
       .filter(Boolean)
   }, [calloutDraft])
@@ -257,6 +252,11 @@ export default function App() {
       })
       const project = buildAnnotatorProject(annotationJson, sourceFile.type)
       const annotatedPng = await renderAnnotatedPng(imageEl, annotations)
+      const delivered = await sendHandoffToCodex({ sourceFile, annotatedPng, annotationJson, project })
+      if (delivered) {
+        setStatus(`已发送标注图到 Codex，等待处理 · ${delivered.bundlePath}`)
+        return
+      }
       const prompt = buildHandoffPrompt(pageSlug, targetStack)
 
       if (workspace) {
@@ -356,7 +356,7 @@ export default function App() {
           区
         </button>
         <button type="button" className={btnPrimary} disabled={busy || !metaReady} onClick={() => void runHandoff()}>
-          {busy ? '…' : 'Codex'}
+          {busy ? '发送中…' : '发送 Codex'}
         </button>
         <input
           ref={fileInputRef}
@@ -436,7 +436,7 @@ export default function App() {
           <SectionTitle className="mt-3">Region 文案</SectionTitle>
           <textarea
             className={`${inputClass} mt-1 min-h-16`}
-            placeholder={'标题\n副标题'}
+            placeholder={'与背景一起生成的文字，每行一句'}
             value={calloutDraft}
             onChange={(e) => setCalloutDraft(e.target.value)}
           />
@@ -529,6 +529,10 @@ export default function App() {
                 fitToken={fitToken}
                 onZoomChange={setZoom}
                 onSelect={setSelectedId}
+                onCreated={(id) => {
+                  setSelectedId(id)
+                  setTool('select')
+                }}
                 onCommit={commit}
                 onMutate={mutate}
                 onDragStart={checkpoint}

@@ -44,10 +44,10 @@ export function buildHandoffPrompt(pageSlug: string, targetStack: TargetStack): 
   const bundle = `output/image-to-code/${pageSlug}`
   const flutterStep =
     targetStack === 'flutter'
-      ? `\n3. If a Flutter PageScaffold exists (see annotation.json flutterPagePath when set), follow regenerating-ui-assets-to-flutter-page to implement that single page using the AssetPackage. Do not create a new Flutter app. Do not wire new business/API logic.`
+      ? `\n3. Before cutting assets, follow original-image-design-json-to-flutter-page: analyze source.* into design-system-profile.json containing style/layout only (no screenshot content), then use it with the AssetPackage to implement the existing Flutter page. Do not create a new Flutter app or wire new business/API logic.`
       : `\n3. TargetStack is ${targetStack}: produce the AssetPackage only. Do not generate a page in v1.`
 
-  return `Use the image-to-code HandoffSkill.
+  return `Use the image-to-code HandoffSkill and $original-image-design-json-to-flutter-page for Flutter targets.
 
 HandoffBundle path (workspace-relative):
 - ${bundle}/annotated.png
@@ -56,7 +56,7 @@ HandoffBundle path (workspace-relative):
 
 Steps:
 1. Confirm the HandoffBundle files exist.
-2. Follow regenerating-ui-redbox-assets on annotated.png. Treat red rectangles as IconMarks. Treat arrows labeled 背景/background as BackgroundCallouts. Use SemanticName values from annotation.json when present. RegionCallout CalloutCopy is text context for code Text widgets — do not bake that copy into background assets.${flutterStep}
+2. For Flutter, first create design-system-profile.json from source.* using the exact prompt in original-image-design-json-to-flutter-page. It must exclude all screenshot content/data and retain only reusable visual/layout roles. Validate it before cutting assets. Then follow regenerating-ui-redbox-assets on annotated.png. Treat red rectangles as IconMarks. Treat arrows labeled 背景/background as BackgroundCallouts. Use SemanticName values from annotation.json when present. For RegionCallout with non-empty calloutCopy, regenerate the indicated background and ALL exact copy together in one image. Use full annotation.json copy, preserve source typography, remove annotation marks, and record textRendering=baked plus bakedText in manifest.json. Do not duplicate the baked copy with Flutter Text; provide semantics. Backgrounds without copy remain clean backgrounds.${flutterStep}
 4. Stop if PageScaffold is missing for Flutter page generation; ask for the destination route/path.`
 }
 
@@ -194,4 +194,42 @@ function extensionFor(name: string, mime: string): string {
 
 export function supportsDirectoryPicker(): boolean {
   return typeof window !== 'undefined' && 'showDirectoryPicker' in window
+}
+
+
+async function blobBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result).split(',')[1])
+    reader.onerror = () => reject(reader.error ?? new Error('图片读取失败'))
+    reader.readAsDataURL(blob)
+  })
+}
+
+/** A 404 means a standalone static/dev host; bridge errors must not pretend delivery succeeded. */
+export async function sendHandoffToCodex(options: {
+  sourceFile: File
+  annotatedPng: Blob
+  annotationJson: AnnotationDocument
+  project: AnnotatorProject
+}): Promise<{ bundlePath: string } | null> {
+  const context = await fetch('/api/context')
+  if (context.status === 404 || !context.headers.get('content-type')?.includes('application/json')) return null
+  if (!context.ok) throw new Error('无法连接 Codex，请重新从目标任务打开 Annotator')
+  const connection = await context.json()
+  if (!connection.available) throw new Error('当前页面未连接 Codex 任务，请在目标任务中重新打开 Annotator')
+  const response = await fetch('/api/handoff', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      requestId: crypto.randomUUID(),
+      annotationJson: options.annotationJson,
+      project: options.project,
+      source: { type: options.sourceFile.type, base64: await blobBase64(options.sourceFile) },
+      annotatedPng: await blobBase64(options.annotatedPng),
+    }),
+  })
+  const result = await response.json()
+  if (!response.ok) throw new Error(result.error ?? '发送 Codex 失败')
+  return result
 }

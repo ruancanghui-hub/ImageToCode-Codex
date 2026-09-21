@@ -22,6 +22,7 @@ interface CanvasStageProps {
   fitToken?: number
   onZoomChange: (zoom: number) => void
   onSelect: (id: string | null) => void
+  onCreated: (id: string) => void
   onCommit: (next: Annotation[] | ((prev: Annotation[]) => Annotation[])) => void
   onMutate: (next: Annotation[] | ((prev: Annotation[]) => Annotation[])) => void
   onDragStart: () => void
@@ -79,6 +80,7 @@ export function CanvasStage(props: CanvasStageProps) {
     fitToken = 0,
     onZoomChange,
     onSelect,
+    onCreated,
     onCommit,
     onMutate,
     onDragStart,
@@ -117,7 +119,7 @@ export function CanvasStage(props: CanvasStageProps) {
       semanticName: nextIconSemanticName(annotationsRef.current),
     }
     onCommit((prev) => [...prev, item])
-    onSelect(item.id)
+    onCreated(item.id)
   }
 
   const panRef = useRef(pan)
@@ -281,7 +283,7 @@ export function CanvasStage(props: CanvasStageProps) {
                 label,
               }
               onCommit((prev) => [...prev, item])
-              onSelect(id)
+              onCreated(id)
             } else {
               const copies = onRequestCalloutCopy()
               const item: RegionCallout = {
@@ -294,7 +296,7 @@ export function CanvasStage(props: CanvasStageProps) {
                 calloutCopy: copies,
               }
               onCommit((prev) => [...prev, item])
-              onSelect(id)
+              onCreated(id)
             }
             setArrowStart(null)
             setArrowPreview(null)

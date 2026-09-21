@@ -7,7 +7,7 @@
 | 块 | 职责 |
 |---|---|
 | `apps/annotator` | ReactBits 亮色画布；Vite/React/TS/Tailwind |
-| `plugins/image-to-code` | HandoffSkill only（v1 无 MCP App 画布） |
+| `plugins/image-to-code` | 静态标注页面、本机发送桥接和 HandoffSkill |
 | 现有 skills | `regenerating-ui-redbox-assets`、`regenerating-ui-assets-to-flutter-page` |
 
 ## Tools
@@ -17,9 +17,9 @@
 
 ## Artifacts
 - **AnnotatorProject** `.itc.json` — 可再编辑
-- **HandoffBundle** `output/image-to-code/<page-slug>/` → `source.*` + `annotated.png` + `annotation.json`
-- 写盘：File System Access → WorkspaceRoot；否则下载回退
-- Handoff 按钮：写盘 + 复制 prompt
+- **HandoffBundle** `output/image-to-code/<page-slug>/<request-id>/` → `source.*` + `annotated.png` + `annotation.json`
+- 插件本机服务写盘到启动任务工作区；独立 Vite 页面保留下载回退
+- Handoff 按钮：写入独立快照 + 附标注图发送到绑定的 Codex 任务；由指定技能生成资源和 Flutter 单页
 
 ## TargetStack
 - `flutter`：资源 + 页面（需 PageScaffold；可选 FlutterPagePath）
