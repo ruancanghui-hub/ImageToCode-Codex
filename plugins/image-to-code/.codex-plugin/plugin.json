@@ -1,6 +1,6 @@
 {
   "name": "image-to-code",
-  "version": "0.2.1",
+  "version": "0.2.1+codex.20260921012719",
   "description": "Open the bundled ImageToCode Annotator and hand off annotated images into code-ready assets.",
   "author": {
     "name": "ImageToCode"
@@ -8,7 +8,7 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Image To Code",
-    "shortDescription": "Open Annotator → Handoff → code-ready assets.",
+    "shortDescription": "Open Annotator \u2192 Handoff \u2192 code-ready assets.",
     "longDescription": "Includes a self-contained ImageToCode Annotator web app for Codex's right-side browser and orchestrates its HandoffBundles into code-ready assets and Flutter pages.",
     "developerName": "ImageToCode",
     "category": "Productivity",
