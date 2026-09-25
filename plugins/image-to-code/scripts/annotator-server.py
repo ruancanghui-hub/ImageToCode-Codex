@@ -22,7 +22,7 @@ def handoff_prompt(bundle, doc):
     return f'''Use ${skill}. Read {skill_file} and follow its workflow.
 The user clicked Send to Codex in ImageToCode Annotator. Process this saved snapshot now.
 HandoffBundle (absolute): {bundle}
-Read annotated.png, source image, and annotation.json in this directory. The annotated image is attached.
+Read annotated.png, source image, and annotation.json in this directory.
 Target stack: {doc['targetStack']}. Flutter destination: {destination}
 For Flutter targets, first analyze the original source image into <bundle>/design-system-profile.json. Use the exact design-system extraction prompt in $original-image-design-json-to-flutter-page. The profile must contain reusable visual style and layout only, with no source copy, names, logos, dates, numbers, or other source data. Validate the JSON, then use it with the asset manifest to reconstruct the Flutter page.
 Red boxes: regenerate isolated transparent icons, never screenshot crops.
@@ -120,7 +120,7 @@ class Handler(SimpleHTTPRequestHandler):
                 try:
                     result = subprocess.run(
                         [self.server.codex, 'queue', '--thread', self.server.thread_id,
-                         '--message', prompt, '--image', str(bundle / 'annotated.png')],
+                         '--message', prompt],
                         cwd=self.server.workspace, capture_output=True, text=True, timeout=45,
                     )
                 except subprocess.TimeoutExpired:

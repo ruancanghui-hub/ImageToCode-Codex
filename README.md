@@ -20,7 +20,7 @@ npm install
 npm run dev
 ```
 
-流程：从目标 Codex 任务打开 Annotator → 上传图 → 填 PageSlug / TargetStack → 标注 → **发送 Codex**。插件保存标注图、原图和完整标注数据，再通过 `codex queue` 把标注图附件及技能指令发送到打开页面的任务。Flutter 目标继续调用 `regenerating-ui-assets-to-flutter-page` 完成资源生成和单页实现。
+流程：从目标 Codex 任务打开 Annotator → 上传图 → 填 PageSlug / TargetStack → 标注 → **发送 Codex**。插件保存标注图、原图和完整标注数据，再通过 `codex queue` 把 HandoffBundle 路径和技能指令发送到打开页面的任务。Flutter 目标继续调用 `regenerating-ui-assets-to-flutter-page` 完成资源生成和单页实现。
 
 Region 的非空文案会与箭头指向的背景一起生成到图片中；普通背景仍为无字背景。Flutter 不重复叠加图片里已有的文字。
 
@@ -46,7 +46,7 @@ codex plugin add image-to-code@image-to-code-codex
 打开 ImageToCode Annotator 到右侧
 ```
 
-新任务才会加载更新后的 skills。启动脚本从当前任务继承 `CODEX_THREAD_ID` 和工作区；也可显式传参：`open-annotator.sh 4173 /absolute/workspace <task-id>`。请从目标项目的 Codex 任务启动，发送时会使用该任务的现有上下文。需要 Python 3 和支持 `codex queue --image` 的 Codex CLI。
+新任务才会加载更新后的 skills。启动脚本从当前任务继承 `CODEX_THREAD_ID` 和工作区；也可显式传参：`open-annotator.sh 4173 /absolute/workspace <task-id>`。请从目标项目的 Codex 任务启动，发送时会使用该任务的现有上下文。需要 Python 3 和支持 `codex queue --message` 的 Codex CLI。
 
 验证：`python3 -m unittest discover -s plugins/image-to-code/tests -v`；前端在 `apps/annotator` 执行 `npm run build`。
 

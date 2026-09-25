@@ -50,7 +50,7 @@ class HandoffTest(unittest.TestCase):
             return error.code, json.load(error)
 
     @patch.object(bridge.subprocess, 'run')
-    def test_delivery_attaches_saved_image_and_preserves_exact_copy(self, run):
+    def test_delivery_queues_saved_bundle_path_and_preserves_exact_copy(self, run):
         run.return_value = subprocess.CompletedProcess([], 0, 'queued', '')
         status, receipt = self.post()
         self.assertEqual(status, 200)
@@ -60,8 +60,9 @@ class HandoffTest(unittest.TestCase):
         self.assertEqual(doc['annotations'][0]['calloutCopy'], ['慢一点，更专注。'])
         args = run.call_args.args[0]
         self.assertEqual(args[0:4], ['codex', 'queue', '--thread', 'bound-task'])
-        self.assertEqual(args[-2:], ['--image', str(bundle / 'annotated.png')])
+        self.assertEqual(args, ['codex', 'queue', '--thread', 'bound-task', '--message', args[5]])
         self.assertIn(str(bundle), args[5])
+        self.assertIn('Read annotated.png, source image, and annotation.json', args[5])
         self.assertIn('$original-image-design-json-to-flutter-page', args[5])
         self.assertIn('design-system-profile.json', args[5])
         self.assertEqual(self.post(), (status, receipt))
