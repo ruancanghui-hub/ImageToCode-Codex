@@ -26,8 +26,8 @@ import type {
 const tools: { id: ToolId; label: string; hint: string }[] = [
   { id: 'select', label: '选择', hint: '移动 / 缩放标注' },
   { id: 'iconMark', label: 'IconMark', hint: '拖拽红框，自动命名' },
-  { id: 'backgroundCallout', label: 'Background', hint: '两点画箭头，标签自动' },
-  { id: 'regionCallout', label: 'Region', hint: '箭头 + 侧栏 CalloutCopy' },
+  { id: 'backgroundCallout', label: 'Background', hint: '两点画箭头，只生成无字背景' },
+  { id: 'regionCallout', label: 'Region', hint: '两点画箭头，区域文字与背景整图生成' },
 ]
 
 export default function App() {
@@ -433,10 +433,10 @@ export default function App() {
               </button>
             ))}
           </div>
-          <SectionTitle className="mt-3">Region 文案</SectionTitle>
+          <SectionTitle className="mt-3">Region 文案（整图生成）</SectionTitle>
           <textarea
             className={`${inputClass} mt-1 min-h-16`}
-            placeholder={'与背景一起生成的文字，每行一句'}
+            placeholder={'区域内要与背景一起生成的文字；每行一句'}
             value={calloutDraft}
             onChange={(e) => setCalloutDraft(e.target.value)}
           />
@@ -636,7 +636,7 @@ export default function App() {
                       </button>
                     ))}
                   </div>
-                  <label className="mt-3 block text-[11px] text-[var(--muted)]">Region CalloutCopy</label>
+                  <label className="mt-3 block text-[11px] text-[var(--muted)]">Region CalloutCopy（文字将烘焙进整图）</label>
                   <textarea
                     className={`${inputClass} min-h-20`}
                     value={calloutDraft}

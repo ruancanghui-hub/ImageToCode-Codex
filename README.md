@@ -22,7 +22,7 @@ npm run dev
 
 流程：从目标 Codex 任务打开 Annotator → 上传图 → 填 PageSlug / TargetStack → 标注 → **发送 Codex**。插件保存标注图、原图和完整标注数据，再通过 `codex queue` 把 HandoffBundle 路径和技能指令发送到打开页面的任务。Flutter 目标继续调用 `regenerating-ui-assets-to-flutter-page` 完成资源生成和单页实现。
 
-Region 的非空文案会与箭头指向的背景一起生成到图片中；普通背景仍为无字背景。Flutter 不重复叠加图片里已有的文字。
+Region 指向的整个区域会连同背景和其中全部文字一起生成到图片中；填写的 CalloutCopy 是文字内容的准确来源。Background 只生成无字背景。Flutter 不重复叠加 Region 图片里已有的文字。
 
 每次发送保存独立快照：`output/image-to-code/<page-slug>/<request-id>/`（`source.*`、`annotated.png`、`annotation.json`、项目 JSON 和 `handoff.txt`），避免下一次编辑覆盖排队中的图片。单独运行 Vite 时仍使用下载/复制提示词回退。
 

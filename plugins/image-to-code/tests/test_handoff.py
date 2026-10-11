@@ -65,6 +65,8 @@ class HandoffTest(unittest.TestCase):
         self.assertIn('Read annotated.png, source image, and annotation.json', args[5])
         self.assertIn('$original-image-design-json-to-flutter-page', args[5])
         self.assertIn('design-system-profile.json', args[5])
+        self.assertIn('Background arrows: generate only clean standalone backgrounds, with no text baked into the image.', args[5])
+        self.assertIn('Region arrows: generate the entire indicated region — background and all visible text — together in ONE image.', args[5])
         self.assertEqual(self.post(), (status, receipt))
         run.assert_called_once()
 
